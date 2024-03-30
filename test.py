@@ -1,8 +1,6 @@
 import streamlit as st
-import matplotlib.pyplot as plt
 import PyPDF2
 import openai
-import re
 
 # Set your OpenAI API key
 openai.api_key = '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'
