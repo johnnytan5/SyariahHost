@@ -4,7 +4,7 @@ import openai
 import os
 
 # Set your OpenAI API key
-openai.api_key = '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'
+openai.api_key = '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'
 
 def save_uploaded_file(uploaded_file, folder_path, file_name):
     # Create the uploads directory if it doesn't exist
@@ -144,7 +144,15 @@ def string_to_float(input_string):
         return float(int_values[-1])
     # If neither floats nor integers are found, return None
     else:
-        return None
+        return 0.0
+
+def is_shariah_compliant(coa, doa):
+    syariah = coa < 33.0 and doa < 33.0
+    if syariah:
+        st.write("Congratulations! Your company is Shariah compliant.")
+    else:
+        st.write("Sorry, your company is not Shariah compliant.")
+
 
 
 def main():
@@ -186,8 +194,10 @@ def main():
             COA = (total_cash / total_assets)*100
             DOA = (total_debt / total_assets)*100
 
-            st.write("COA: {:.2f}".format(COA))
-            st.write("DOA: {:.2f}".format(DOA))
+            st.write("COA: {:.2f}%".format(COA))
+            st.write("DOA: {:.2f}%".format(DOA))
+
+            is_shariah_compliant(COA, DOA)
 
         except Exception as e:
             st.error(f"Error: {e}")
