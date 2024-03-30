@@ -3,26 +3,43 @@ import PyPDF2
 import openai
 
 # Set your OpenAI API key
-openai.api_key = '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'
+openai.api_key = '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'
 
-def extract_pages_with_keywords(input_pdf_path, keywords):
-    # Open the PDF file
-    with open(input_pdf_path, "rb") as file:
-        # Create a PdfReader object
-        pdf_reader = PyPDF2.PdfReader(file)
-        # Initialize an empty string to store the extracted pages
-        extracted_pages_text = ""
+# def extract_pages_with_keywords(input_pdf_path, keywords):
+#     # Open the PDF file
+#     with open(input_pdf_path, "rb") as file:
+#         # Create a PdfReader object
+#         pdf_reader = PyPDF2.PdfReader(file)
+#         # Initialize an empty string to store the extracted pages
+#         extracted_pages_text = ""
+#
+#         # Iterate through each page of the PDF
+#         for page_number, page in enumerate(pdf_reader.pages, start=1):
+#             # Extract text from the page
+#             page_text = page.extract_text()
+#             # Check if any of the keywords are present in the page text
+#             if any(keyword in page_text for keyword in keywords):
+#                 # Append the page text to the extracted pages string
+#                 extracted_pages_text += page_text
+#
+#         return extracted_pages_text
 
-        # Iterate through each page of the PDF
-        for page_number, page in enumerate(pdf_reader.pages, start=1):
-            # Extract text from the page
-            page_text = page.extract_text()
-            # Check if any of the keywords are present in the page text
-            if any(keyword in page_text for keyword in keywords):
-                # Append the page text to the extracted pages string
-                extracted_pages_text += page_text
+def extract_pages_with_keywords(pdf_file, keywords):
+    # Create a PdfReader object directly from the file object
+    pdf_reader = PyPDF2.PdfReader(pdf_file)
+    # Initialize an empty string to store the extracted pages
+    extracted_pages_text = ""
 
-        return extracted_pages_text
+    # Iterate through each page of the PDF
+    for page_number, page in enumerate(pdf_reader.pages, start=1):
+        # Extract text from the page
+        page_text = page.extract_text()
+        # Check if any of the keywords are present in the page text
+        if any(keyword in page_text for keyword in keywords):
+            # Append the page text to the extracted pages string
+            extracted_pages_text += page_text
+
+    return extracted_pages_text
 
 
 def read_pdf(file):
@@ -106,7 +123,7 @@ def main():
     if uploaded_file is not None:
         try:
             # Read PDF contents
-            pdf_contents = read_pdf(uploaded_file)
+            #pdf_contents = read_pdf(uploaded_file)
             keywords = ["STATEMENTS OF FINANCIAL POSITION", "STATEMENT OF FINANCIAL POSITION",
                         "Statements of financial position", "STATEMENTS OF FINANCIAL POSITION", "BALANCE SHEETS"]
             extracted_text = extract_pages_with_keywords(uploaded_file.name, keywords)  # Pass file path instead of content
