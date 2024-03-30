@@ -4,7 +4,7 @@ import openai
 import os
 
 # Set your OpenAI API key
-openai.api_key = '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'
+openai.api_key = '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'
 
 def save_uploaded_file(uploaded_file, folder_path, file_name):
     # Create the uploads directory if it doesn't exist
