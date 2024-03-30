@@ -2,9 +2,11 @@ import streamlit as st
 import PyPDF2
 import openai
 import os
+import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 
 # Set your OpenAI API key
-openai.api_key = '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'
+openai.api_key = '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'
 
 def save_uploaded_file(uploaded_file, folder_path, file_name):
     # Create the uploads directory if it doesn't exist
@@ -72,7 +74,7 @@ def extract_total_cash(text):
         model="ft:gpt-3.5-turbo-0125:personal::98TxxR5J",  # You can use any appropriate GPT model here
         messages=[
             {"role": "system",
-             "content": "Find all figures in group/consolidated section for the latest year that contains the word 'cash' and add them together , please use prefix at the right place, use group/consolidated, don't include cash in company):"},
+             "content": "Find all figures in group/consolidated section for the latest year that contains the word 'cash' and add them together ,  use group/consolidated, don't include cash in company):"},
             {"role": "user", "content": text},
         ],
         max_tokens=4000,
@@ -86,7 +88,7 @@ def extract_total_debt(text):
         model="ft:gpt-3.5-turbo-0125:personal::98TxxR5J",  # You can use any appropriate GPT model here
         messages=[
             {"role": "system",
-             "content": "Find all figures in group/consolidated section for the latest year that contains the word 'borrowing' and 'loan' and  add them together( please don't add any borrowings or loan under company! I only want group!) ):, please use prefix at the right place"},
+             "content": "Find all figures in group/consolidated section for the latest year that contains the word 'borrowing' and 'loan'(sum up short term and long term) and  add them together( please don't add any borrowings or loan under company! I only want group!) ):, please use prefix at the right place"},
             {"role": "user", "content": text},
         ],
         max_tokens=4000,
@@ -101,7 +103,7 @@ def extract_total_assets(text):
         model="ft:gpt-3.5-turbo-0125:personal::98TxxR5J",  # You can use any appropriate GPT model here
         messages=[
             {"role": "system",
-             "content": "Extract the total Asset for group/consolidated for the latest year from the provided text(don't bullshit I want only the unit and the number ), please use prefix at the right place:"},
+             "content": "Extract the total Asset for group/consolidated for the latest year from the provided text"},
             {"role": "user", "content": text},
         ],
         max_tokens=4000,
@@ -128,13 +130,9 @@ import re
 
 def string_to_float(input_string):
     # Use regular expressions to find all floating-point numbers and integers
-
-    new_string = input_string.replace(",", "")
-    float_values = re.findall(r'\d+\.\d+', new_string)
-    int_values = re.findall(r'\b\d+\b', new_string)
-
-    # Convert float values to actual floats
-    float_values = [float(value) for value in float_values]
+    new_string = input_string.replace(",", "").replace("RM", "")
+    float_values = [float(value) for value in re.findall(r'\b\d+\.\d+\b', new_string)]
+    int_values = [int(value) for value in re.findall(r'\b\d+\b', new_string)]
 
     # If float values are found, return the last float
     if float_values:
@@ -142,7 +140,7 @@ def string_to_float(input_string):
     # If no float values are found, but integers are found, return the last integer as float
     elif int_values:
         return float(int_values[-1])
-    # If neither floats nor integers are found, return None
+    # If neither floats nor integers are found, return 0.0
     else:
         return 0.0
 
@@ -161,6 +159,27 @@ def calculate_doa(total_debt, total_asset):
 
 def is_shariah_compliant(coa, doa):
     return coa < 33.0 and doa < 33.0
+
+import streamlit as st
+import plotly.graph_objects as go
+
+def generate_ring_pie_chart(chart_name, percentage):
+    # Ensure percentage is between 0 and 100
+    percentage = max(0, min(100, percentage))
+
+    # Calculate the remaining percentage
+    remaining_percentage = 100.0 - percentage
+
+    # Create figure
+    fig = go.Figure(data=[go.Pie(labels=['COA', 'Remaining'], values=[percentage, remaining_percentage], hole=.3)])
+
+    # Update layout
+    fig.update_layout(title_text=chart_name)
+
+    # Display the chart using Streamlit
+    st.plotly_chart(fig)
+
+
 
 def main():
     st.title("Syariah Compliance Checker")
@@ -202,38 +221,43 @@ def main():
             DOA = (total_debt / total_assets)*100
 
             st.write("COA: {:.2f}%".format(COA))
+            generate_ring_pie_chart("Cash over Asset Percentage Chart", COA)
+
             st.write("DOA: {:.2f}%".format(DOA))
+            generate_ring_pie_chart("Debt over Asset Percentage Chart", DOA)
 
-            is_shariah_compliant(COA, DOA)
-
-            with st.form("input_form"):
-                total_assets_old = total_assets;
-                total_debt_old = total_debt;
-                total_cash_old = total_cash;
-
-                st.write("Enter correct values if there are any errors:")
-                total_asset = st.number_input("Total Asset", value=total_assets_old)
-                total_debt = st.number_input("Total Debt", value=total_debt_old)
-                total_cash = st.number_input("Total Cash", value=total_cash_old)
-
-                submit_button = st.form_submit_button(label='Submit')
-
-
-            if submit_button:
-                # Recalculate COA and DOA
-                COA = calculate_coa(total_cash, total_asset)
-                DOA = calculate_doa(total_debt, total_asset)
-
-                # Determine Syariah status
-                syariah_compliant = is_shariah_compliant(COA, DOA)
-
-            st.write("New Calculations:")
-            st.write(f"COA: {COA:.2f}%")
-            st.write(f"DOA: {DOA:.2f}%")
-            if syariah_compliant:
+            syariah_compliant_1 = is_shariah_compliant(COA, DOA)
+            if syariah_compliant_1:
                 st.success("Congratulations! Your company is Syariah compliant.")
             else:
                 st.error("Your company is not Syariah compliant.")
+
+            submit_button = None  # Initialize submit_button
+
+            if st.button("Appeal"):
+                with st.form("input_form"):
+                    st.write("Enter correct values if there are any errors:")
+                    total_asset = st.number_input("Total Asset", value=1000000)
+                    total_debt = st.number_input("Total Debt", value=500000)
+                    total_cash = st.number_input("Total Cash", value=200000)
+
+                    submit_button = st.form_submit_button(label='Submit')
+
+                if submit_button:
+                    # Recalculate COA and DOA
+                    COA = calculate_coa(total_cash, total_asset)
+                    DOA = calculate_doa(total_debt, total_asset)
+
+                    # Determine Syariah status
+                syariah_compliant = is_shariah_compliant(COA, DOA)
+
+                st.write("New Calculations:")
+                st.write(f"COA: {COA:.2f}%")
+                st.write(f"DOA: {DOA:.2f}%")
+                if syariah_compliant:
+                    st.success("Congratulations! Your company is Syariah compliant.")
+                else:
+                    st.error("Your company is not Syariah compliant.")
 
 
 
