@@ -4,7 +4,7 @@ import openai
 import os
 
 # Set your OpenAI API key
-openai.api_key = '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'
+openai.api_key = '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'
 
 def save_uploaded_file(uploaded_file, folder_path, file_name):
     # Create the uploads directory if it doesn't exist
@@ -153,7 +153,14 @@ def is_shariah_compliant(coa, doa):
     else:
         st.write("Sorry, your company is not Shariah compliant.")
 
+def calculate_coa(total_cash, total_asset):
+    return (total_cash / total_asset) * 100
 
+def calculate_doa(total_debt, total_asset):
+    return (total_debt / total_asset) * 100
+
+def is_shariah_compliant(coa, doa):
+    return coa < 33.0 and doa < 33.0
 
 def main():
     st.title("Syariah Compliance Checker")
@@ -198,6 +205,37 @@ def main():
             st.write("DOA: {:.2f}%".format(DOA))
 
             is_shariah_compliant(COA, DOA)
+
+            with st.form("input_form"):
+                total_assets_old = total_assets;
+                total_debt_old = total_debt;
+                total_cash_old = total_cash;
+
+                st.write("Enter correct values if there are any errors:")
+                total_asset = st.number_input("Total Asset", value=total_assets_old)
+                total_debt = st.number_input("Total Debt", value=total_debt_old)
+                total_cash = st.number_input("Total Cash", value=total_cash_old)
+
+                submit_button = st.form_submit_button(label='Submit')
+
+
+            if submit_button:
+                # Recalculate COA and DOA
+                COA = calculate_coa(total_cash, total_asset)
+                DOA = calculate_doa(total_debt, total_asset)
+
+                # Determine Syariah status
+                syariah_compliant = is_shariah_compliant(COA, DOA)
+
+            st.write("New Calculations:")
+            st.write(f"COA: {COA:.2f}%")
+            st.write(f"DOA: {DOA:.2f}%")
+            if syariah_compliant:
+                st.success("Congratulations! Your company is Syariah compliant.")
+            else:
+                st.error("Your company is not Syariah compliant.")
+
+
 
         except Exception as e:
             st.error(f"Error: {e}")
