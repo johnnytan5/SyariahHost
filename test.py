@@ -223,13 +223,13 @@ def main():
 
             # Extract total assets using GPT
             total_assets_str = extract_total_assets(extracted_text)
-            st.write(f" {total_assets_str}")
+            #st.write(f" {total_assets_str}")
 
             total_cash_str = extract_total_cash(extracted_text)
-            st.write(f" {total_cash_str}")
+            #st.write(f" {total_cash_str}")
 
             total_debt_str = extract_total_debt(extracted_text)
-            st.write(f" {total_debt_str}")
+            #st.write(f" {total_debt_str}")
 
             total_assets = string_to_float(total_assets_str) * multiplier
             st.write("Total assets: RM" + str(total_assets))
