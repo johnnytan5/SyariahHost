@@ -1,9 +1,19 @@
 import streamlit as st
 import PyPDF2
 import openai
+import os
 
 # Set your OpenAI API key
-openai.api_key = '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'
+openai.api_key = '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'
+
+def save_uploaded_file(uploaded_file, folder_path, file_name):
+    # Create the uploads directory if it doesn't exist
+    os.makedirs(folder_path, exist_ok=True)
+    # Save the file to the uploads directory
+    file_path = os.path.join(folder_path, file_name)
+    with open(file_path, "wb") as f:
+        f.write(uploaded_file.getbuffer())
+    return file_path
 
 # def extract_pages_with_keywords(input_pdf_path, keywords):
 #     # Open the PDF file
@@ -59,7 +69,7 @@ def syariah_test_passed(cash_over_asset, debt_over_asset):
 def extract_total_cash(text):
 
     response = openai.ChatCompletion.create(
-        model="ft:gpt-3.5-turbo-0125:personal::98OgUyCP",  # You can use any appropriate GPT model here
+        model="gpt-3.5-turbo",  # You can use any appropriate GPT model here
         messages=[
             {"role": "system",
              "content": "Find all figures in group/consolidated section for the latest year that contains the word 'cash' and add them together ):"},
@@ -73,7 +83,7 @@ def extract_total_cash(text):
 def extract_total_debt(text):
 
     response = openai.ChatCompletion.create(
-        model="ft:gpt-3.5-turbo-0125:personal::98OgUyCP",  # You can use any appropriate GPT model here
+        model="gpt-3.5-turbo",  # You can use any appropriate GPT model here
         messages=[
             {"role": "system",
              "content": "Find all figures in group/consolidated section for the latest year that contains the word 'borrowing' and 'loan' and  add them together( please don't add any borrowings or loan under company! I only want group!) ):"},
@@ -88,7 +98,7 @@ def extract_total_assets(text):
     # Use GPT to extract total assets from the text
     # Extract financial ratios using GPT
     response = openai.ChatCompletion.create(
-        model="ft:gpt-3.5-turbo-0125:personal::98OgUyCP",  # You can use any appropriate GPT model here
+        model="gpt-3.5-turbo",  # You can use any appropriate GPT model here
         messages=[
             {"role": "system",
              "content": "Extract the total Asset for group/consolidated for the latest year from the provided text(don't bullshit I want only the unit and the number ):"},
@@ -122,11 +132,13 @@ def main():
 
     if uploaded_file is not None:
         try:
-            # Read PDF contents
-            #pdf_contents = read_pdf(uploaded_file)
+            # Save the uploaded file to the uploads directory with the name "stored.pdf"
+            uploads_dir = "uploads"
+            file_path = save_uploaded_file(uploaded_file, uploads_dir, "stored.pdf")
+
             keywords = ["STATEMENTS OF FINANCIAL POSITION", "STATEMENT OF FINANCIAL POSITION",
                         "Statements of financial position", "STATEMENTS OF FINANCIAL POSITION", "BALANCE SHEETS"]
-            extracted_text = extract_pages_with_keywords(uploaded_file.name, keywords)  # Pass file path instead of content
+            extracted_text = extract_pages_with_keywords(file_path, keywords)  # Pass file path instead of content
 
             # Extract total assets using GPT
             total_assets_str = extract_total_assets(extracted_text)
@@ -152,14 +164,6 @@ def main():
 
             st.write("COA: " + str(COA))
             st.write("DOA: " + str(DOA))
-
-
-
-
-
-            # Further processing...
-            # You can continue with the rest of your code here
-            # Extract financial ratios using GPT, visualize data, etc.
 
         except Exception as e:
             st.error(f"Error: {e}")
