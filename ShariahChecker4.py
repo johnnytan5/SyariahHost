@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 import re
 
-openai.api_key = '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'
+openai.api_key = ''
 
 def save_uploaded_file(uploaded_file, folder_path, file_name):
     os.makedirs(folder_path, exist_ok=True)
